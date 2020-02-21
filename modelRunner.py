@@ -2,11 +2,12 @@
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
+import numpy as np
 
 # load and prepare the image
 def load_image(filename):
 	# load the image
-	img = load_img(filename, grayscale=True, target_size=(28, 28))
+	img = load_img(filename, target_size=(28, 28), color_mode = "grayscale")
 	# convert to array
 	img = img_to_array(img)
 	# reshape into a single sample with 1 channel
@@ -19,12 +20,18 @@ def load_image(filename):
 # load an image and predict the class
 def run_example():
 	# load the image
-	img = load_image('sample_image.png')
+	img = load_image('digit.jpg')
 	# load model
 	model = load_model('final_model.h5')
 	# predict the class
-	digit = model.predict_classes(img)
-	print(digit[0])
+	digit = model.predict(img, 32, 0)
+	digit = digit[0]
+	strings = []
+	for number in range(10):
+		d = digit[number]
+		if d>0.1:
+			strings.append(str(number)+"="+str(d)[0:3])
+	return strings
 
 # entry point, run the example
 run_example()

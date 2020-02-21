@@ -1,61 +1,49 @@
 # save the final model to file
 from keras.datasets import mnist
-from keras.utils import to_categorical
+from keras.utils import to_categorical, np_utils
 from keras.models import Sequential
-from keras.layers import Conv2D
+from keras.layers import Conv2D, Dropout
 from keras.layers import MaxPooling2D
 from keras.layers import Dense
 from keras.layers import Flatten
 from keras.optimizers import SGD
-# load train and test dataset
-def load_dataset():
-	# load dataset
-	(trainX, trainY), (testX, testY) = mnist.load_data()
-	# reshape dataset to have a single channel
-	trainX = trainX.reshape((trainX.shape[0], 28, 28, 1))
-	testX = testX.reshape((testX.shape[0], 28, 28, 1))
-	# one hot encode target values
-	trainY = to_categorical(trainY)
-	testY = to_categorical(testY)
-	return trainX, trainY, testX, testY
 
-# scale pixels
-def prep_pixels(train, test):
-	# convert from integers to floats
-	train_norm = train.astype('float32')
-	test_norm = test.astype('float32')
-	# normalize to range 0-1
-	train_norm = train_norm / 255.0
-	test_norm = test_norm / 255.0
-	# return normalized images
-	return train_norm, test_norm
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+# reshape to be [samples][width][height][channels]
+X_train = X_train.reshape((X_train.shape[0], 28, 28, 1)).astype('float32')
+X_test = X_test.reshape((X_test.shape[0], 28, 28, 1)).astype('float32')
+# normalize inputs from 0-255 to 0-1
+X_train = X_train / 255
+X_test = X_test / 255
+# one hot encode outputs
+y_train = np_utils.to_categorical(y_train)
+y_test = np_utils.to_categorical(y_test)
+num_classes = y_test.shape[1]
 
-# define cnn model
-def define_model():
+def larger_model():
 	model = Sequential()
-	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=(28, 28, 1)))
-	model.add(MaxPooling2D((2, 2)))
-	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform'))
-	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform'))
-	model.add(MaxPooling2D((2, 2)))
+	model.add(Conv2D(30, (5, 5), input_shape=(28, 28, 1), activation='relu'))
+	model.add(MaxPooling2D())
+	model.add(Conv2D(15, (3, 3), activation='relu'))
+	model.add(MaxPooling2D())
+	model.add(Dropout(0.2))
 	model.add(Flatten())
-	model.add(Dense(100, activation='relu', kernel_initializer='he_uniform'))
-	model.add(Dense(10, activation='softmax'))
-	# compile model
-	opt = SGD(lr=0.01, momentum=0.9)
-	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+	model.add(Dense(128, activation='relu'))
+	model.add(Dense(50, activation='relu'))
+	model.add(Dense(num_classes, activation='softmax'))
+	# Compile model
+	model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 	return model
 
 # run the test harness for evaluating a model
 def run_test_harness():
-	# load dataset
-	trainX, trainY, testX, testY = load_dataset()
-	# prepare pixel data
-	trainX, testX = prep_pixels(trainX, testX)
-	# define model
-	model = define_model()
-	# fit model
-	model.fit(trainX, trainY, epochs=1, batch_size=32, verbose=0)
+
+	model = larger_model()
+	# Fit the model
+	model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=200)
+	# Final evaluation of the model
+	scores = model.evaluate(X_test, y_test, verbose=0)
+	print("Large CNN Error: %.2f%%" % (100 - scores[1] * 100))
 	# save model
 	model.save('final_model.h5')
 
