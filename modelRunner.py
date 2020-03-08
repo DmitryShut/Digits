@@ -21,7 +21,7 @@ def closiest_28(w, h):
 
 def image_to_28_size(image):
     size = closiest_28(image.shape[0], image.shape[1])
-    ar = np.zeros((size, size))
+    ar = np.full((size, size),255,image.dtype)
     highFrom = (int)((size - image.shape[0]) / 2)
     widthFrom = (int)((size - image.shape[1]) / 2)
     w = 0
@@ -36,10 +36,11 @@ def image_to_28_size(image):
     return ar
 
 # load and prepare the image
-def load_image2(filename):
-    image = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-    resized = cv2.resize(image_to_28_size(image), (28, 28), interpolation=cv2.INTER_CUBIC)
-    cv2.imwrite('resized.jpg', resized)
+def load_image2(image, idx):
+    grayimage = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+    #image = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+    resized = cv2.resize(image_to_28_size(grayimage), (28, 28), interpolation=cv2.INTER_CUBIC)
+    cv2.imwrite("resized_{0}.png".format(idx), resized)
     resized = resized.reshape(1, 28, 28, 1)
     # prepare pixel data
     resized = resized.astype('float32')
@@ -47,9 +48,9 @@ def load_image2(filename):
     return resized
 
 # load an image and predict the class
-def run_example():
+def run_example(image, idx):
     # load the image
-    img = load_image2('digit.jpg')
+    img = load_image2(image, idx)
     # load model
     model = load_model('final_model.h5')
     # predict the class
