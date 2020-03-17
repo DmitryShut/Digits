@@ -1,16 +1,15 @@
 # import the necessary packages
-from imutils.perspective import four_point_transform
 from imutils import contours
 import imutils
 import cv2
 from modelRunner import run_example
 
 # load the example image
-image = cv2.imread("sample_image.png")
+image = cv2.imread("sample.png")
 # pre-process the image by resizing it, converting it to
 # graycale, blurring it, and computing an edge map
-image = imutils.resize(image, height=500)
-imageToPrint = imutils.resize(image, height=500)
+#image = imutils.resize(image, height=500)
+imageToPrint = image
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 edged = cv2.Canny(blurred, 50, 200, 255)
@@ -44,16 +43,18 @@ for c in cnts:
 # actual digits themselves
 digitCnts = contours.sort_contours(digitCnts, method="left-to-right")[0]
 # loop over each of the digits
+idx = 1
 for c in digitCnts:
 	# extract the digit ROI
 	(x, y, w, h) = cv2.boundingRect(c)
-	cv2.imwrite("digit.jpg",image[y-5:y + h+5, x-5:x + w+5])
-	digit = run_example()
+	cv2.imwrite("digit_{0}.png".format(idx),image[y - 5:y + h + 5, x - 5:x + w + 5])
+	digit = run_example(image[y - 5:y + h + 5, x - 5:x + w + 5],idx)
 	print(digit)
 	cv2.rectangle(imageToPrint, (x, y), (x + w, y + h), (0, 255, 0), 1)
 	l = 0
+	idx += 1
 	for string in digit:
-		cv2.putText(imageToPrint, str(string), (x - 5, y - 5-l), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 0)
+		cv2.putText(imageToPrint, str(string), (x - 5, y - 5 - l), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 0)
 		l+=20
 cv2.imshow("edged",imageToPrint)
 cv2.waitKey(0)
