@@ -6,11 +6,13 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 import matplotlib.pyplot as plt
 from keras_preprocessing.image import np
-from tensorflow_core.python import confusion_matrix
+import tensorflow as tf
+from keras.utils.vis_utils import plot_model
+import seaborn as sn
 
 batch_size = 128
 num_classes = 10
-epochs = 20
+epochs = 19
 
 img_rows, img_cols = 28, 28
 
@@ -82,11 +84,16 @@ y_pred = model.predict(x_test)
 Y_pred = np.argmax(y_pred, 1)
 Y_test = np.argmax(y_test, 1)
 
-mat = confusion_matrix(Y_test, Y_pred)
-print(mat)
+fig, ax = plt.subplots(figsize=(10, 10))
+mat = tf.math.confusion_matrix(Y_test, Y_pred)
+sn.heatmap(mat, square=True, annot=True, cbar=False, linewidths=.5, ax=ax)
+plt.xlabel('Predicted Values')
+plt.ylabel('True Values')
+plt.show()
 
+plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
-
+print(model.summary())
 model.save('final_model.h5')
