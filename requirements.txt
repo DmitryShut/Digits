@@ -4,3 +4,4 @@ tensorflow==2.2.0
 numpy==1.18.4
 imutils==0.5.3
 opencv-python==4.2.0.34
+seaborn==0.10.1
